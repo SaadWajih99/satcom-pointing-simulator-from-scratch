@@ -1,6 +1,9 @@
 # Import time so the terminal updates appear gradually.
 import time
 
+# Import the reusable proportional controller function.
+from python_model.proportional_controller import calculate_proportional_command
+
 # Set the antenna target direction in degrees.
 target_azimuth = 72.0
 
@@ -27,11 +30,13 @@ step = 0
 
 # Repeat until the antenna is within the allowed pointing error.
 while abs(target_azimuth - actual_azimuth) > tolerance:
-    # Calculate the pointing error before this update.
-    tracking_error = target_azimuth - actual_azimuth
 
-    # Request an angular speed based on the current pointing error.
-    requested_speed = proportional_gain * tracking_error
+    # Use the reusable controller to calculate the error and requested speed.
+    tracking_error, requested_speed = calculate_proportional_command(
+       target_azimuth,
+       actual_azimuth,
+       proportional_gain,
+)
 
     # Keep the requested speed inside the motor speed limits.
     actual_speed = max(-max_speed, min(requested_speed, max_speed))
