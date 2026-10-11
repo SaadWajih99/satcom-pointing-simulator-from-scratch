@@ -147,3 +147,9 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Ignore Python-generated cache folders.
+__pycache__/
+
+# Ignore compiled Python cache files.
+*.pyc
