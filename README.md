@@ -4,7 +4,7 @@ An educational browser-based simulator for a ground antenna tracking azimuth and
 
 > **Educational model only:** this simulator is not validated for controlling real antenna hardware. Its parameters are illustrative, not measured specifications for a real antenna or drive system.
 
-## Dashboard
+
 
 ![Two-axis antenna pointing simulator dashboard](docs/simulator-dashboard.png)
 
