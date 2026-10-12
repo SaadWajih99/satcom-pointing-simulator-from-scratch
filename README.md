@@ -1,98 +1,81 @@
 # SATCOM Two-Axis Antenna Pointing Simulator
 
-An educational browser-based simulator for a ground antenna tracking azimuth and elevation commands. It includes independent PID controllers, a simplified actuator model, encoder feedback effects, live telemetry, response plots, and performance metrics.
+An educational, browser-based simulator for a ground antenna tracking commanded azimuth and elevation angles. The project demonstrates independent PID controllers, simplified actuator dynamics, encoder-feedback effects, disturbance response, live telemetry, and control-system performance metrics.
 
-> **Educational model only:** this simulator is not validated for controlling real antenna hardware. Its parameters are illustrative, not measured specifications for a real antenna or drive system.
+> **Educational use only:** This simulator is not validated for controlling real antenna hardware. Its parameters are illustrative and are not calibrated against a physical antenna or drive system.
 
-## Open the simulator
+## Open the Simulator
 
-[Launch the live simulator](https://cautious-potato-jjx65r4wvj562qx69-8000.app.github.dev/web/)
+[**Launch the Live Simulator**](https://cautious-potato-jjx65r4wvj562qx69-8000.app.github.dev/)
 
-This preview runs through GitHub Codespaces. It may be unavailable when the Codespace is stopped or its forwarded port is inactive.
+The live preview runs through GitHub Codespaces. It may be unavailable when the Codespace is stopped or its forwarded port is inactive. If the link stops working, start the server in your active Codespace and open the current forwarded address from the Ports tab.
 
 ## Features
 
-- Independent azimuth and elevation target commands and PID gains.
-- Configurable actuator speed, acceleration, damping, and disturbance inputs.
-- Encoder feedback with adjustable delay, measurement noise, and bias.
-- Live antenna views, telemetry, step-response and tracking-error plots.
-- Response metrics including rise time, overshoot, settling, steady-state error, RMS error, and maximum error.
-- Pause/resume, reset, and clear-chart-history controls.
+### Two-Axis Pointing Control
+- Independent azimuth and elevation target commands.
+- Azimuth target range: 0° to 360°.
+- Elevation target range: 0° to 90°.
+- Separate PID gain settings for both axes.
+- Real-time antenna-position visualisations.
 
-## Run locally
+### PID Controller Tuning
+- Adjustable proportional gain (\(K_p\)).
+- Adjustable integral gain (\(K_i\)).
+- Adjustable derivative gain (\(K_d\)).
+- Conditional integration to limit integral windup during actuator saturation.
+- Filtered derivative contribution based on measured angular velocity.
 
-The simulator uses plain HTML, CSS, and JavaScript. No package installation or build step is required.
+### Actuator Model
+- Configurable maximum angular speed.
+- Configurable maximum angular acceleration.
+- Velocity-proportional damping.
+- Adjustable disturbance acceleration.
 
-From the repository root, run:
+### Encoder Feedback
+- Adjustable feedback delay.
+- Measurement noise.
+- Encoder bias.
+- Separate true antenna position and measured encoder position.
 
-```bash
-python -m http.server 8000 --directory web
-```
+### Visualisation and Telemetry
+- Azimuth plan view with compass directions.
+- Elevation side view.
+- Target and actual antenna-position indicators.
+- Live target, position, encoder reading, and tracking-error telemetry.
+- Angular velocity and motor-command displays.
+- Step-response and tracking-error plots.
+- Pause, resume, reset, and clear-chart-history controls.
 
-Then open [http://localhost:8000](http://localhost:8000) on the **same computer** running that server. In Codespaces, use the forwarded address from the Ports tab instead.
+### Performance Metrics
+The simulator reports response and tracking metrics, including:
 
-## Model overview
+- Rise time.
+- Overshoot.
+- Settling time.
+- Steady-state error.
+- Root-mean-square (RMS) tracking error.
+- Maximum tracking error.
 
-The azimuth and elevation axes are simulated independently:
+Metric values depend on the target command, selected controller settings, and recorded simulation interval.
 
-1. Compare each target with its encoder measurement to calculate position error.
-2. Use PID control to calculate a requested angular-speed command.
-3. Apply simplified actuator dynamics, acceleration and speed limits, damping, and disturbance acceleration.
-4. Update antenna position from angular velocity.
-5. Apply encoder delay, bias, and measurement noise to feedback.
-6. Record simulation samples for plots and performance metrics.
+## Control-System Model
 
-The controller uses:
+The azimuth and elevation axes are simulated independently. Each axis has its own target, controller configuration, actuator state, and encoder-feedback state.
+
+The simulation follows this sequence:
+
+1. Read the commanded target angle.
+2. Calculate position error using the encoder-measured angle.
+3. Apply PID control to calculate a requested angular-speed command.
+4. Apply actuator speed and acceleration limits, damping, and disturbance acceleration.
+5. Update antenna position and angular velocity.
+6. Apply encoder delay, bias, and measurement noise to the feedback.
+7. Record simulation samples for telemetry, response plots, and performance metrics.
+
+### PID Control Law
+
+The controller uses the following PID-style expression:
 
 ```text
 u = Kp × e + Ki × integral(e dt) − Kd × filtered(measured angular velocity)
-```
-
-Here, `u` is requested angular speed and `e` is target angle minus measured angle. Conditional integration limits integral windup when the requested output saturates.
-
-## Units
-
-- Position and error: degrees (°).
-- Angular velocity and requested speed: degrees per second (°/s).
-- Angular acceleration and disturbance: degrees per second squared (°/s²).
-- Time: seconds (s).
-
-## Assumptions and limitations
-
-- The actuator is an illustrative speed-servo model, not a torque/inertia model fitted to a particular antenna.
-- Damping is velocity-proportional damping; it is not mechanical backlash.
-- Encoder quantization and mechanical backlash are not implemented.
-- Disturbance input is acceleration, not a detailed aerodynamic or structural-load model.
-- Metrics are calculated from recorded samples and should be interpreted in the context of the target move and selected settings.
-- Do not use this model to control physical equipment.
-
-## Project structure
-
-```text
-web/
-  index.html
-  styles.css
-  app.js
-python_model/
-tests/
-```
-
-- `web/index.html` — simulator interface and visualizations.
-- `web/styles.css` — dashboard styling and responsive layout.
-- `web/app.js` — controller, actuator, encoder, plots, telemetry, and metrics.
-- `python_model/` — Python tracking-model experiments.
-- `tests/` — Python model tests.
-
-## Tests
-
-Run the Python tests with:
-
-```bash
-python -m unittest discover -s tests
-```
-
-Only report tests as passing after running them in your environment.
-
-## License
-
-See [LICENSE](LICENSE).
