@@ -1,570 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SATCOM Antenna Pointing Simulator</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#06121a">
+  <title>SATCOM Two-Axis Antenna Pointing Simulator</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
 </head>
-
 <body>
-  <main class="app">
+<header class="topbar">
+  <div class="brand">
+    <p class="eyebrow">CLOSED-LOOP AZIMUTH + ELEVATION</p>
+    <h1>Two-axis antenna pointing simulator</h1>
+    <p class="subtitle">Interactive control-system study bench · 50 Hz discrete-time model</p>
+  </div>
+  <div class="status"><span class="status-dot"></span><span id="status-text">STARTING</span></div>
+</header>
 
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">CLOSED-LOOP AZIMUTH + ELEVATION</p>
-        <h1>Two-axis pointing simulator</h1>
-      </div>
+<main class="dashboard">
+  <aside class="left-column">
+    <section class="panel">
+      <p class="eyebrow">01 / TRACKING REFERENCE</p><h2>Target command</h2>
+      <label class="control"><span>Azimuth target <output id="az-target-out">242°</output></span><input id="az-target" type="range" min="0" max="359" value="242"></label>
+      <label class="control"><span>Elevation target <output id="el-target-out">65°</output></span><input id="el-target" type="range" min="0" max="90" value="65"></label>
+      <div class="button-row"><button id="pause-btn" class="primary">Pause</button><button id="reset-btn">Reset</button></div>
+    </section>
 
-      <p class="system-status">
-        <span class="status-dot"></span>
-        SIMULATION ACTIVE
-      </p>
-    </header>
+    <section class="panel">
+      <p class="eyebrow">02 / CONTROLLER CONFIGURATION</p><h2>PID tuning</h2>
+      <p class="muted">Tune one axis at a time. Delayed feedback and aggressive gains can cause overshoot or oscillation.</p>
+      <h3>Azimuth axis</h3>
+      <label class="control"><span>Proportional gain, Kp <output id="az-kp-out">2.4</output></span><input id="az-kp" type="range" min="0" max="12" step=".1" value="2.4"></label>
+      <label class="control"><span>Integral gain, Ki <output id="az-ki-out">0.08</output></span><input id="az-ki" type="range" min="0" max="2" step=".01" value=".08"></label>
+      <label class="control"><span>Derivative gain, Kd <output id="az-kd-out">0.7</output></span><input id="az-kd" type="range" min="0" max="8" step=".1" value=".7"></label>
+      <h3>Elevation axis</h3>
+      <label class="control"><span>Proportional gain, Kp <output id="el-kp-out">2.4</output></span><input id="el-kp" type="range" min="0" max="12" step=".1" value="2.4"></label>
+      <label class="control"><span>Integral gain, Ki <output id="el-ki-out">0.08</output></span><input id="el-ki" type="range" min="0" max="2" step=".01" value=".08"></label>
+      <label class="control"><span>Derivative gain, Kd <output id="el-kd-out">0.7</output></span><input id="el-kd" type="range" min="0" max="8" step=".1" value=".7"></label>
+    </section>
+  </aside>
 
-    <section class="panel command-panel">
-      <p class="eyebrow">01 / TRACKING REFERENCE</p>
-      <h2>Target command</h2>
-
-      <div class="controls">
-        <label>
-          Azimuth target:
-          <span id="azimuth-target-value">72</span>°
-          <input
-            id="azimuth-slider"
-            type="range"
-            min="0"
-            max="360"
-            value="72"
-          >
-        </label>
-
-        <label>
-          Elevation target:
-          <span id="elevation-target-value">38</span>°
-          <input
-            id="elevation-slider"
-            type="range"
-            min="0"
-            max="90"
-            value="38"
-          >
-        </label>
-      </div>
-
-      <div class="button-row">
-        <button id="pause-button">Pause</button>
-        <button id="reset-button">Reset</button>
+  <section class="center-column">
+    <section class="panel assembly">
+      <div class="section-title"><div><p class="eyebrow">03 / ANTENNA ASSEMBLY</p><h2>Live pointing view</h2></div><span class="live-tag">LIVE</span></div>
+      <div class="visual-grid">
+        <article class="visual-card">
+          <h3>Elevation / side view</h3>
+          <svg viewBox="0 0 320 220" role="img" aria-label="Elevation side view">
+            <line x1="25" y1="180" x2="295" y2="180" class="horizon"/>
+            <circle cx="160" cy="180" r="6" class="pivot"/>
+            <line id="el-target-arm" x1="160" y1="180" x2="160" y2="80" class="target-arm"/>
+            <line id="el-actual-arm" x1="160" y1="180" x2="160" y2="80" class="actual-arm"/>
+            <text x="18" y="202" class="svg-label">HORIZON · 0°</text><text x="205" y="22" class="svg-label">ZENITH · 90°</text>
+          </svg>
+          <div class="legend"><span><i class="key target"></i>Target reference</span><span><i class="key actual"></i>True antenna</span></div>
+        </article>
+        <article class="visual-card">
+          <h3>Azimuth / plan view</h3>
+          <svg viewBox="0 0 320 220" role="img" aria-label="Azimuth plan view">
+            <circle cx="160" cy="110" r="77" class="ring"/><circle cx="160" cy="110" r="52" class="ring dashed"/>
+            <line x1="160" y1="25" x2="160" y2="195" class="crosshair"/><line x1="75" y1="110" x2="245" y2="110" class="crosshair"/>
+            <line id="az-target-arm" x1="160" y1="110" x2="160" y2="40" class="target-arm"/>
+            <line id="az-actual-arm" x1="160" y1="110" x2="160" y2="40" class="actual-arm"/>
+            <circle cx="160" cy="110" r="5" class="pivot"/>
+            <text x="156" y="17" class="svg-label">N</text><text x="253" y="114" class="svg-label">E</text><text x="156" y="212" class="svg-label">S</text><text x="57" y="114" class="svg-label">W</text>
+          </svg>
+          <div class="legend"><span><i class="key target"></i>Target reference</span><span><i class="key actual"></i>True antenna</span></div>
+        </article>
       </div>
     </section>
 
-    <section class="panel tuning-panel">
-      <p class="eyebrow">02 / CONTROLLER CONFIGURATION</p>
-      <h2>PID tuning</h2>
-
-      <p class="panel-description">
-        Adjust PID gains during a move to compare response speed,
-        overshoot, damping, and instability.
-      </p>
-
-      <div class="tuning-grid">
-
-        <section class="tuning-axis">
-          <h3>AZIMUTH AXIS</h3>
-
-          <label>
-            Proportional gain, Kp:
-            <strong id="azimuth-kp-value">1.50</strong>
-            <input
-              id="azimuth-kp-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="1.50"
-            >
-          </label>
-
-          <label>
-            Integral gain, Ki:
-            <strong id="azimuth-ki-value">0.05</strong>
-            <input
-              id="azimuth-ki-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="0.05"
-            >
-          </label>
-
-          <label>
-            Derivative gain, Kd:
-            <strong id="azimuth-kd-value">0.80</strong>
-            <input
-              id="azimuth-kd-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="0.80"
-            >
-          </label>
-        </section>
-
-        <section class="tuning-axis">
-          <h3>ELEVATION AXIS</h3>
-
-          <label>
-            Proportional gain, Kp:
-            <strong id="elevation-kp-value">1.50</strong>
-            <input
-              id="elevation-kp-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="1.50"
-            >
-          </label>
-
-          <label>
-            Integral gain, Ki:
-            <strong id="elevation-ki-value">0.05</strong>
-            <input
-              id="elevation-ki-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="0.05"
-            >
-          </label>
-
-          <label>
-            Derivative gain, Kd:
-            <strong id="elevation-kd-value">0.80</strong>
-            <input
-              id="elevation-kd-slider"
-              type="range"
-              min="0"
-              max="50"
-              step="0.05"
-              value="0.80"
-            >
-          </label>
-        </section>
-
+    <section class="panel">
+      <div class="section-title"><div><p class="eyebrow">04 / RESPONSE HISTORY</p><h2>Position and tracking error</h2></div><button id="clear-btn">Clear history</button></div>
+      <div class="chart-grid">
+        <article class="chart-card"><h3>Azimuth position</h3><canvas id="position-chart" aria-label="Azimuth position chart"></canvas><div class="legend"><span><i class="key target"></i>Target</span><span><i class="key actual"></i>True position</span></div></article>
+        <article class="chart-card"><h3>Tracking error</h3><canvas id="error-chart" aria-label="Tracking error chart"></canvas><div class="legend"><span><i class="key actual"></i>Azimuth error</span><span><i class="key target"></i>Elevation error</span></div></article>
       </div>
     </section>
 
-    <section class="panel plant-panel">
-      <p class="eyebrow">03 / ACTUATOR AND MECHANICS</p>
-      <h2>Physical plant configuration</h2>
-
-      <p class="panel-description">
-        Change motor limits, acceleration, mechanical damping, and wind
-        disturbance to observe realistic antenna motion.
-      </p>
-
-      <div class="tuning-grid">
-
-        <section class="tuning-axis">
-          <h3>AZIMUTH ACTUATOR</h3>
-
-          <label>
-            Maximum speed:
-            <strong id="azimuth-max-speed-value">20.0°/s</strong>
-            <input
-              id="azimuth-max-speed-slider"
-              type="range"
-              min="1"
-              max="60"
-              step="1"
-              value="20"
-            >
-          </label>
-
-          <label>
-            Maximum acceleration:
-            <strong id="azimuth-max-acceleration-value">35.0°/s²</strong>
-            <input
-              id="azimuth-max-acceleration-slider"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value="35"
-            >
-          </label>
-
-          <label>
-            Mechanical damping:
-            <strong id="azimuth-damping-value">0.00</strong>
-            <input
-              id="azimuth-damping-slider"
-              type="range"
-              min="0"
-              max="10"
-              step="0.1"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Wind disturbance:
-            <strong id="azimuth-wind-value">0.00°/s²</strong>
-            <input
-              id="azimuth-wind-slider"
-              type="range"
-              min="-20"
-              max="20"
-              step="0.1"
-              value="0"
-            >
-          </label>
-        </section>
-
-        <section class="tuning-axis">
-          <h3>ELEVATION ACTUATOR</h3>
-
-          <label>
-            Maximum speed:
-            <strong id="elevation-max-speed-value">15.0°/s</strong>
-            <input
-              id="elevation-max-speed-slider"
-              type="range"
-              min="1"
-              max="60"
-              step="1"
-              value="15"
-            >
-          </label>
-
-          <label>
-            Maximum acceleration:
-            <strong id="elevation-max-acceleration-value">25.0°/s²</strong>
-            <input
-              id="elevation-max-acceleration-slider"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value="25"
-            >
-          </label>
-
-          <label>
-            Mechanical damping:
-            <strong id="elevation-damping-value">0.00</strong>
-            <input
-              id="elevation-damping-slider"
-              type="range"
-              min="0"
-              max="10"
-              step="0.1"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Wind disturbance:
-            <strong id="elevation-wind-value">0.00°/s²</strong>
-            <input
-              id="elevation-wind-slider"
-              type="range"
-              min="-20"
-              max="20"
-              step="0.1"
-              value="0"
-            >
-          </label>
-        </section>
-
+    <section class="panel">
+      <p class="eyebrow">05 / LIVE TELEMETRY</p><h2>System state</h2>
+      <div class="telemetry-grid">
+        <div class="metric"><span>Simulation time</span><strong id="sim-time">0.00 s</strong></div>
+        <div class="metric"><span>Azimuth true position</span><strong id="az-pos">0.0°</strong></div>
+        <div class="metric"><span>Azimuth encoder</span><strong id="az-measured">0.0°</strong></div>
+        <div class="metric"><span>Azimuth tracking error</span><strong id="az-error">0.0°</strong></div>
+        <div class="metric"><span>Azimuth velocity</span><strong id="az-velocity">0.0°/s</strong></div>
+        <div class="metric"><span>Elevation true position</span><strong id="el-pos">0.0°</strong></div>
+        <div class="metric"><span>Elevation encoder</span><strong id="el-measured">0.0°</strong></div>
+        <div class="metric"><span>Elevation tracking error</span><strong id="el-error">0.0°</strong></div>
+        <div class="metric"><span>Elevation velocity</span><strong id="el-velocity">0.0°/s</strong></div>
       </div>
     </section>
+  </section>
 
-    <section class="panel sensor-panel">
-      <p class="eyebrow">04 / ENCODER FEEDBACK</p>
-      <h2>Sensor realism</h2>
-
-      <p class="panel-description">
-        PID control uses the delayed, noisy, biased encoder measurement,
-        not the true antenna position. Large delay plus aggressive gains can
-        create visible oscillation or instability.
-      </p>
-
-      <div class="tuning-grid">
-
-        <section class="tuning-axis">
-          <h3>AZIMUTH ENCODER</h3>
-
-          <label>
-            Feedback delay:
-            <strong id="azimuth-delay-value">0 ms</strong>
-            <input
-              id="azimuth-delay-slider"
-              type="range"
-              min="0"
-              max="1000"
-              step="10"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Measurement noise:
-            <strong id="azimuth-noise-value">0.00°</strong>
-            <input
-              id="azimuth-noise-slider"
-              type="range"
-              min="0"
-              max="5"
-              step="0.05"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Encoder bias:
-            <strong id="azimuth-bias-value">0.00°</strong>
-            <input
-              id="azimuth-bias-slider"
-              type="range"
-              min="-10"
-              max="10"
-              step="0.1"
-              value="0"
-            >
-          </label>
-        </section>
-
-        <section class="tuning-axis">
-          <h3>ELEVATION ENCODER</h3>
-
-          <label>
-            Feedback delay:
-            <strong id="elevation-delay-value">0 ms</strong>
-            <input
-              id="elevation-delay-slider"
-              type="range"
-              min="0"
-              max="1000"
-              step="10"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Measurement noise:
-            <strong id="elevation-noise-value">0.00°</strong>
-            <input
-              id="elevation-noise-slider"
-              type="range"
-              min="0"
-              max="5"
-              step="0.05"
-              value="0"
-            >
-          </label>
-
-          <label>
-            Encoder bias:
-            <strong id="elevation-bias-value">0.00°</strong>
-            <input
-              id="elevation-bias-slider"
-              type="range"
-              min="-10"
-              max="10"
-              step="0.1"
-              value="0"
-            >
-          </label>
-        </section>
-
-      </div>
+  <aside class="right-column">
+    <section class="panel">
+      <p class="eyebrow">06 / ACTUATOR + MECHANICS</p><h2>Physical plant configuration</h2>
+      <h3>Azimuth actuator</h3>
+      <label class="control"><span>Maximum speed <output id="az-speed-out">24°/s</output></span><input id="az-speed" type="range" min="2" max="60" value="24"></label>
+      <label class="control"><span>Maximum acceleration <output id="az-accel-out">30°/s²</output></span><input id="az-accel" type="range" min="2" max="80" value="30"></label>
+      <h3>Elevation actuator</h3>
+      <label class="control"><span>Maximum speed <output id="el-speed-out">16°/s</output></span><input id="el-speed" type="range" min="2" max="45" value="16"></label>
+      <label class="control"><span>Maximum acceleration <output id="el-accel-out">20°/s²</output></span><input id="el-accel" type="range" min="2" max="60" value="20"></label>
+      <label class="control"><span>Mechanical damping <output id="damping-out">1.4</output></span><input id="damping" type="range" min="0" max="6" step=".1" value="1.4"></label>
+      <label class="control"><span>Wind disturbance <output id="wind-out">0.0°/s²</output></span><input id="wind" type="range" min="-5" max="5" step=".1" value="0"></label>
     </section>
-
-        <!-- Live simulation dashboard in a wide landscape layout. -->
-    <section class="operations-dashboard">
-
-      <article class="panel visual-panel operations-main">
-        <p class="eyebrow">05 / ANTENNA ASSEMBLY</p>
-        <h2>Live pointing view</h2>
-
-        <div class="operations-views">
-
-          <section class="view-box">
-            <h3>ELEVATION / SIDE VIEW</h3>
-
-            <svg class="elevation-view" viewBox="0 0 500 300" aria-label="Elevation side view">
-              <line x1="55" y1="235" x2="455" y2="235" class="horizon-line"></line>
-
-              <circle cx="150" cy="235" r="8" class="radar-centre"></circle>
-
-              <g id="elevation-target-group">
-                <line x1="150" y1="235" x2="325" y2="235" class="target-arrow"></line>
-              </g>
-
-              <g id="elevation-actual-group">
-                <line x1="150" y1="235" x2="300" y2="235" class="actual-arrow"></line>
-              </g>
-
-              <text x="455" y="260" class="elevation-label">0° HORIZON</text>
-              <text x="150" y="45" class="elevation-label">90° ZENITH</text>
-            </svg>
-
-            <div class="legend">
-              <span class="target-legend">— Target elevation</span>
-              <span class="actual-legend">— True antenna</span>
-            </div>
-          </section>
-
-          <section class="view-box">
-            <h3>AZIMUTH / PLAN VIEW</h3>
-
-            <svg class="radar" viewBox="0 0 400 400" aria-label="Azimuth radar">
-              <circle cx="200" cy="200" r="150" class="radar-ring"></circle>
-              <circle cx="200" cy="200" r="100" class="radar-ring inner-ring"></circle>
-
-              <line x1="50" y1="200" x2="350" y2="200" class="radar-grid"></line>
-              <line x1="200" y1="50" x2="200" y2="350" class="radar-grid"></line>
-
-              <text x="200" y="32" class="compass-label">N</text>
-              <text x="375" y="205" class="compass-label">E</text>
-              <text x="200" y="385" class="compass-label">S</text>
-              <text x="25" y="205" class="compass-label">W</text>
-
-              <g id="target-arrow-group">
-                <line x1="200" y1="200" x2="335" y2="200" class="target-arrow"></line>
-              </g>
-
-              <g id="actual-arrow-group">
-                <line x1="200" y1="200" x2="320" y2="200" class="actual-arrow"></line>
-              </g>
-
-              <circle cx="200" cy="200" r="7" class="radar-centre"></circle>
-            </svg>
-
-            <div class="legend">
-              <span class="target-legend">— Target reference</span>
-              <span class="actual-legend">— True antenna</span>
-            </div>
-          </section>
-
-        </div>
-
-        <section class="response-grid">
-          <article class="chart-card">
-            <div class="chart-header">
-              <h3>STEP RESPONSE</h3>
-              <button id="clear-history-button" class="small-button">
-                Clear history
-              </button>
-            </div>
-
-            <p class="chart-legend">
-              <span class="chart-cyan">— True position</span>
-              <span class="chart-amber">— Target command</span>
-            </p>
-
-            <canvas id="position-chart" width="720" height="220"></canvas>
-          </article>
-
-          <article class="chart-card">
-            <div class="chart-header">
-              <h3>TRACKING ERROR</h3>
-              <span id="response-status">LIVE</span>
-            </div>
-
-            <p class="chart-legend">
-              <span class="chart-cyan">— Azimuth error</span>
-              <span class="chart-amber">— Elevation error</span>
-            </p>
-
-            <canvas id="error-chart" width="720" height="220"></canvas>
-          </article>
-        </section>
-      </article>
-
-      <aside class="operations-sidebar">
-
-        <section class="panel telemetry-card">
-          <p class="eyebrow">06 / LIVE SIGNALS</p>
-          <h2>Azimuth telemetry</h2>
-
-          <p>Target <strong id="telemetry-target">72.0°</strong></p>
-          <p>True position <strong id="telemetry-actual">0.0°</strong></p>
-          <p>Encoder reading <strong id="telemetry-measured">0.0°</strong></p>
-          <p>Control error <strong id="telemetry-error">72.0°</strong></p>
-          <p>Velocity <strong id="telemetry-velocity">0.0°/s</strong></p>
-          <p>Motor command <strong id="telemetry-speed">0.0°/s</strong></p>
-        </section>
-
-        <section class="panel telemetry-card">
-          <p class="eyebrow">07 / LIVE SIGNALS</p>
-          <h2>Elevation telemetry</h2>
-
-          <p>
-            Target
-            <strong id="elevation-telemetry-target">38.0°</strong>
-          </p>
-
-          <p>
-            True position
-            <strong id="elevation-telemetry-actual">0.0°</strong>
-          </p>
-
-          <p>
-            Encoder reading
-            <strong id="elevation-telemetry-measured">0.0°</strong>
-          </p>
-
-          <p>
-            Control error
-            <strong id="elevation-telemetry-error">38.0°</strong>
-          </p>
-
-          <p>
-            Velocity
-            <strong id="elevation-telemetry-velocity">0.0°/s</strong>
-          </p>
-
-          <p>
-            Motor command
-            <strong id="elevation-telemetry-speed">0.0°/s</strong>
-          </p>
-        </section>
-
-        <section class="panel telemetry-card">
-          <p class="eyebrow">08 / RESPONSE QUALITY</p>
-          <h2>System condition</h2>
-
-          <p>
-            Feedback delay
-            <strong id="dashboard-delay">0 ms</strong>
-          </p>
-
-          <p>
-            Wind disturbance
-            <strong id="dashboard-wind">0.00°/s²</strong>
-          </p>
-
-          <p>
-            Azimuth speed
-            <strong id="dashboard-az-speed">0.0°/s</strong>
-          </p>
-
-          <p>
-            Elevation speed
-            <strong id="dashboard-el-speed">0.0°/s</strong>
-          </p>
-        </section>
-
-      </aside>
+    <section class="panel">
+      <p class="eyebrow">07 / ENCODER FEEDBACK</p><h2>Sensor realism</h2>
+      <label class="control"><span>Feedback delay <output id="delay-out">120 ms</output></span><input id="delay" type="range" min="0" max="800" step="20" value="120"></label>
+      <label class="control"><span>Measurement noise <output id="noise-out">0.15°</output></span><input id="noise" type="range" min="0" max="2" step=".05" value=".15"></label>
+      <label class="control"><span>Encoder bias <output id="bias-out">0.00°</output></span><input id="bias" type="range" min="-3" max="3" step=".1" value="0"></label>
+      <p class="muted">Illustrative parameters for learning and comparison. Not calibrated against a real antenna.</p>
     </section>
-  </main>
-
-  <script src="app.js"></script>
+    <section class="panel">
+      <p class="eyebrow">08 / QUICK SCENARIOS</p><h2>Response experiments</h2>
+      <div class="scenario-list"><button id="scenario-normal">Nominal tracking</button><button id="scenario-noisy">Noisy delayed encoder</button><button id="scenario-aggressive">Aggressive P-only control</button></div>
+    </section>
+  </aside>
+</main>
+<footer>Educational simulation · Fixed 50 Hz integration · Results are illustrative, not hardware certification</footer>
+<noscript>This simulator requires JavaScript enabled.</noscript>
 </body>
 </html>
