@@ -1,81 +1,130 @@
+
 # SATCOM Two-Axis Antenna Pointing Simulator
 
-An educational, browser-based simulator for a ground antenna tracking commanded azimuth and elevation angles. The project demonstrates independent PID controllers, simplified actuator dynamics, encoder-feedback effects, disturbance response, live telemetry, and control-system performance metrics.
+**Live Demo:** [Open the SATCOM Two-Axis Pointing Simulator](https://saadwajih99.github.io/satcom-two-axis-pointing-simulator/)
 
-> **Educational use only:** This simulator is not validated for controlling real antenna hardware. Its parameters are illustrative and are not calibrated against a physical antenna or drive system.
+An interactive, browser-based educational simulator for understanding closed-loop azimuth and elevation antenna pointing control in satellite communications (SATCOM).
 
-## Open the Simulator
-
-[**Launch the Live Simulator**](https://cautious-potato-jjx65r4wvj562qx69-8000.app.github.dev/)
-
-The live preview runs through GitHub Codespaces. It may be unavailable when the Codespace is stopped or its forwarded port is inactive. If the link stops working, start the server in your active Codespace and open the current forwarded address from the Ports tab.
+The simulator models two independent control axes, actuator dynamics, encoder feedback effects, and tracking performance. It provides live visualisations and telemetry to help explore how controller tuning and physical limitations influence antenna pointing behaviour.
 
 ## Features
 
 ### Two-Axis Pointing Control
 - Independent azimuth and elevation target commands.
-- Azimuth target range: 0° to 360°.
-- Elevation target range: 0° to 90°.
-- Separate PID gain settings for both axes.
-- Real-time antenna-position visualisations.
+- Separate PID controller tuning for each axis.
+- Live tracking error and antenna position monitoring.
 
-### PID Controller Tuning
-- Adjustable proportional gain (\(K_p\)).
-- Adjustable integral gain (\(K_i\)).
-- Adjustable derivative gain (\(K_d\)).
-- Conditional integration to limit integral windup during actuator saturation.
-- Filtered derivative contribution based on measured angular velocity.
-
-### Actuator Model
-- Configurable maximum angular speed.
-- Configurable maximum angular acceleration.
-- Velocity-proportional damping.
-- Adjustable disturbance acceleration.
+### Actuator and Mechanical Model
+- Adjustable maximum actuator speed.
+- Adjustable maximum acceleration.
+- Configurable mechanical damping.
+- Wind disturbance inputs.
+- Elevation travel limits and continuous azimuth rotation.
 
 ### Encoder Feedback
 - Adjustable feedback delay.
-- Measurement noise.
-- Encoder bias.
-- Separate true antenna position and measured encoder position.
+- Configurable measurement noise.
+- Adjustable encoder bias.
+- Comparison between true antenna position and measured encoder position.
 
 ### Visualisation and Telemetry
-- Azimuth plan view with compass directions.
-- Elevation side view.
-- Target and actual antenna-position indicators.
-- Live target, position, encoder reading, and tracking-error telemetry.
-- Angular velocity and motor-command displays.
-- Step-response and tracking-error plots.
-- Pause, resume, reset, and clear-chart-history controls.
+- Live azimuth and elevation pointing views.
+- Step-response plots.
+- Tracking-error plots.
+- Real-time position, velocity, control error, and motor command telemetry.
+- Response-quality metrics, including rise time, overshoot, settling time, steady-state error, RMS error, and maximum error.
+- Pause, reset, and chart-history controls.
 
-### Performance Metrics
-The simulator reports response and tracking metrics, including:
+## How It Works
 
-- Rise time.
-- Overshoot.
-- Settling time.
-- Steady-state error.
-- Root-mean-square (RMS) tracking error.
-- Maximum tracking error.
+The simulator represents a simplified closed-loop antenna pointing system.
 
-Metric values depend on the target command, selected controller settings, and recorded simulation interval.
+1. **Target reference:** The user selects the commanded azimuth and elevation angles.
+2. **Feedback measurement:** The encoder model produces a measured position that can include delay, noise, and bias.
+3. **PID control:** Independent controllers calculate actuator speed commands using the tracking error.
+4. **Actuator dynamics:** The simulated actuators respond subject to speed, acceleration, damping, and disturbance limits.
+5. **Performance monitoring:** The interface displays antenna motion, tracking errors, telemetry, and response-quality metrics.
 
-## Control-System Model
+The two axes can be tuned independently to explore how proportional, integral, and derivative gains influence tracking response.
 
-The azimuth and elevation axes are simulated independently. Each axis has its own target, controller configuration, actuator state, and encoder-feedback state.
+## Technology
 
-The simulation follows this sequence:
+- HTML5
+- CSS3
+- JavaScript
+- Python model and unit-test files for additional experimentation
 
-1. Read the commanded target angle.
-2. Calculate position error using the encoder-measured angle.
-3. Apply PID control to calculate a requested angular-speed command.
-4. Apply actuator speed and acceleration limits, damping, and disturbance acceleration.
-5. Update antenna position and angular velocity.
-6. Apply encoder delay, bias, and measurement noise to the feedback.
-7. Record simulation samples for telemetry, response plots, and performance metrics.
+The interactive browser interface runs directly in a web browser and does not require a local Python server when accessed through the live demo.
 
-### PID Control Law
+## Run Locally
 
-The controller uses the following PID-style expression:
+Clone the repository:
+
+```bash
+git clone https://github.com/SaadWajih99/satcom-two-axis-pointing-simulator.git
+cd satcom-two-axis-pointing-simulator
+```
+
+Start a local web server from the repository root:
+
+```bash
+python -m http.server 8000 --directory web
+```
+
+Open the simulator at:
+
+http://localhost:8000/
+
+Press `Ctrl+C` in the terminal to stop the server.
+
+## Project Structure
 
 ```text
-u = Kp × e + Ki × integral(e dt) − Kd × filtered(measured angular velocity)
+.
+├── web/
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+├── python_model/
+├── tests/
+└── README.md
+```
+
+- `web/` contains the browser-based simulator.
+- `python_model/` contains the supplementary Python model.
+- `tests/` contains the Python unit tests.
+
+## Run the Python Tests
+
+From the repository root, run:
+
+```bash
+python -m unittest discover -s tests
+```
+
+This command runs the available tests. Test results depend on the current code and environment.
+
+## Model Assumptions and Limitations
+
+This is a simplified educational simulation intended to demonstrate control-system concepts.
+
+- The actuator dynamics are approximate and are not a validated model of a specific antenna drive.
+- Encoder delay, noise, and bias are simplified representations of feedback imperfections.
+- PID performance depends on controller gains, actuator constraints, feedback quality, and disturbances.
+- The response metrics are intended for exploratory comparison and should not be treated as certified engineering measurements.
+- The simulator has not been validated against real SATCOM antenna hardware.
+
+It is not intended for hardware deployment, operational antenna control, or safety-critical applications.
+
+## Purpose
+
+This project demonstrates practical exploration of:
+
+- Closed-loop control systems.
+- PID controller tuning.
+- Actuator dynamics and mechanical constraints.
+- Encoder feedback and measurement imperfections.
+- Tracking performance and response analysis.
+- Interactive engineering simulation and visualisation.
+
+**Note:** This project is an educational demonstration, not a validated operational SATCOM control system.
