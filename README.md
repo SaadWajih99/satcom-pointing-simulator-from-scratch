@@ -1,14 +1,14 @@
 # SATCOM Two-Axis Antenna Pointing Simulator
 
-An educational browser-based simulator for a ground antenna tracking azimuth and elevation commands. It combines independent PID controllers, simplified actuator dynamics, encoder effects, live telemetry, response plots, and performance metrics.
+An educational browser-based simulator for a ground antenna tracking azimuth and elevation commands. It includes independent PID controllers, a simplified actuator model, encoder feedback effects, live telemetry, response plots, and performance metrics.
 
-> **Educational model only:** this simulator is not validated for controlling real antenna hardware. Parameters are illustrative, not measured specifications for a real antenna or drive system.
+> **Educational model only:** this simulator is not validated for controlling real antenna hardware. Its parameters are illustrative, not measured specifications for a real antenna or drive system.
 
 ## Open the simulator
 
 [Launch the live simulator](https://cautious-potato-jjx65r4wvj562qx69-8000.app.github.dev/web/)
 
-This preview is hosted in GitHub Codespaces. It may be unavailable when the Codespace is stopped or its forwarded port is no longer active.
+This preview runs through GitHub Codespaces. It may be unavailable when the Codespace is stopped or its forwarded port is inactive.
 
 ## Features
 
@@ -21,7 +21,7 @@ This preview is hosted in GitHub Codespaces. It may be unavailable when the Code
 
 ## Run locally
 
-The simulator uses plain HTML, CSS, and JavaScript and requires no package installation or build step.
+The simulator uses plain HTML, CSS, and JavaScript. No package installation or build step is required.
 
 From the repository root, run:
 
@@ -29,7 +29,7 @@ From the repository root, run:
 python -m http.server 8000 --directory web
 ```
 
-Then open [http://localhost:8000](http://localhost:8000) on the same computer running the server.
+Then open [http://localhost:8000](http://localhost:8000) on the **same computer** running that server. In Codespaces, use the forwarded address from the Ports tab instead.
 
 ## Model overview
 
@@ -39,10 +39,10 @@ The azimuth and elevation axes are simulated independently:
 2. Use PID control to calculate a requested angular-speed command.
 3. Apply simplified actuator dynamics, acceleration and speed limits, damping, and disturbance acceleration.
 4. Update antenna position from angular velocity.
-5. Apply encoder delay, bias, and measurement noise to the feedback.
+5. Apply encoder delay, bias, and measurement noise to feedback.
 6. Record simulation samples for plots and performance metrics.
 
-The controller is:
+The controller uses:
 
 ```text
 u = Kp × e + Ki × integral(e dt) − Kd × filtered(measured angular velocity)
@@ -59,11 +59,11 @@ Here, `u` is requested angular speed and `e` is target angle minus measured angl
 
 ## Assumptions and limitations
 
-- The actuator is an illustrative speed-servo model, not a torque/inertia model fitted to a specific antenna.
-- Damping is velocity-proportional damping; it is not backlash.
+- The actuator is an illustrative speed-servo model, not a torque/inertia model fitted to a particular antenna.
+- Damping is velocity-proportional damping; it is not mechanical backlash.
 - Encoder quantization and mechanical backlash are not implemented.
 - Disturbance input is acceleration, not a detailed aerodynamic or structural-load model.
-- Metrics are calculated from recorded simulation samples and should be interpreted in the context of the target move and chosen settings.
+- Metrics are calculated from recorded samples and should be interpreted in the context of the target move and selected settings.
 - Do not use this model to control physical equipment.
 
 ## Project structure
