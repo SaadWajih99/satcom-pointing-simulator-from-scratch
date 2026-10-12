@@ -300,8 +300,7 @@ const model = {
   running: true,
 
   lastFrame: null,
-  accumulator: 0,
-  fixedStepSeconds: 0.02,
+
   lastSample: -Infinity,
 
 
@@ -1965,7 +1964,6 @@ function drawErrorChart() {
 function resetState() {
 
   model.time = 0;
-
   model.accumulator = 0;
 
   model.lastFrame = null;
@@ -1985,6 +1983,7 @@ function resetState() {
     axis.position = 0;
 
     axis.velocity = 0;
+    axis.motorEffort = 0;
 
     axis.integral = 0;
 
@@ -2007,43 +2006,33 @@ function resetState() {
 
 
 function animationFrame(timestamp) {
-
-  if (model.lastFrame === null) {
-
-    model.lastFrame = timestamp;
-
-  }
-
-
-
-  const elapsed = clamp(
-
-    (timestamp - model.lastFrame) / 1000,
-
-    0,
-
-    0.05
-
-  );
-
-
-
-  model.lastFrame = timestamp;
-
-
-
-  if (model.running && elapsed > 0) {
-
-    updateSimulation(elapsed);
-
-  }
-
-
-
-  updateVisuals();
-
+  // Schedule the next frame first so a display/telemetry error cannot silently
+  // terminate the animation loop. Errors remain visible in the browser console.
   requestAnimationFrame(animationFrame);
 
+  if (model.lastFrame === null) {
+    model.lastFrame = timestamp;
+  }
+
+  const elapsed = clamp((timestamp - model.lastFrame) / 1000, 0, 0.05);
+  model.lastFrame = timestamp;
+
+  try {
+    if (model.running && elapsed > 0) {
+      updateSimulation(elapsed);
+    }
+    updateVisuals();
+  } catch (error) {
+    console.error("SATCOM simulator frame error:", error);
+    const statusText = $("system-status-text");
+    if (statusText) {
+      statusText.textContent = "SIMULATION ERROR — open browser console";
+    }
+    const responseStatus = $("response-status");
+    if (responseStatus) {
+      responseStatus.textContent = "ERROR";
+    }
+  }
 }
 
 
@@ -2137,6 +2126,20 @@ window.addEventListener("resize", () => {
 
 
 /* Start at the HTML slider values and initialise display. */
+
+const requiredElements = [
+  "azimuth-slider", "elevation-slider", "pause-button", "reset-button",
+  "clear-history-button", "position-chart", "error-chart",
+  "azimuth-kp-slider", "azimuth-ki-slider", "azimuth-kd-slider",
+  "elevation-kp-slider", "elevation-ki-slider", "elevation-kd-slider"
+];
+const missingElements = requiredElements.filter((id) => !$(id));
+if (missingElements.length) {
+  console.error("SATCOM simulator could not start. Missing HTML element IDs:", missingElements);
+  const statusText = $("system-status-text");
+  if (statusText) statusText.textContent = `STARTUP ERROR: missing ${missingElements.join(", ")}`;
+  throw new Error(`Missing required HTML elements: ${missingElements.join(", ")}`);
+}
 
 readControls();
 
