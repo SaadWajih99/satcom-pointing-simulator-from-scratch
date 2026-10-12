@@ -300,7 +300,8 @@ const model = {
   running: true,
 
   lastFrame: null,
-
+  accumulator: 0,
+  fixedStepSeconds: 0.02,
   lastSample: -Infinity,
 
 
@@ -1964,6 +1965,8 @@ function drawErrorChart() {
 function resetState() {
 
   model.time = 0;
+
+  model.accumulator = 0;
 
   model.lastFrame = null;
 
